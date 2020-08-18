@@ -32,6 +32,9 @@ public class SneakHandler implements Listener {
     }
 
     private void onAction(Player player) {
+        if (!player.hasPermission("sneakgrow"))
+            return;
+
         PlayerState state = states.computeIfAbsent(player.getName(), e -> new PlayerState());
 
         {
