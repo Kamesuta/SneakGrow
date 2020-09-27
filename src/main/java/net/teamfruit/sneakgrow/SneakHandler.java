@@ -93,7 +93,7 @@ public class SneakHandler implements Listener {
     private <T> Optional<T> getRandomElement(List<T> elements) {
         if (elements.isEmpty())
             return Optional.empty();
-        return Optional.ofNullable(elements.get(rnd.nextInt(elements.size() - 1)));
+        return Optional.ofNullable(elements.get(rnd.nextInt(elements.size())));
     }
 
     private void sendPacketGrowBlock(Location location) {
