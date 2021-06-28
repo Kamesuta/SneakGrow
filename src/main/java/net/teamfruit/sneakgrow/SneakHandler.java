@@ -2,14 +2,16 @@ package net.teamfruit.sneakgrow;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.block.data.BlockData;
-import org.bukkit.block.data.type.Sapling;
+import org.bukkit.block.BlockState;
 import org.bukkit.entity.Ageable;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.Crops;
+import org.bukkit.material.MaterialData;
+import org.bukkit.material.Sapling;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -17,12 +19,12 @@ import java.util.stream.Collectors;
 public class SneakHandler implements Listener {
     private Map<String, PlayerState> states = new HashMap<>();
 
-    private static final ItemStack boneMeal = new ItemStack(Material.BONE_MEAL);
+    private static final ItemStack boneMeal = new ItemStack(Material.INK_SACK, 1, (short) 15);
     private static final Object nmsBoneMeal = ReflectionUtil.itemStackAsNmsCopy(boneMeal);
 
     private final Random rnd = new Random();
 
-    public class PlayerState {
+    public static class PlayerState {
         public boolean isSneaking;
         public boolean isSneaked;
         public int ticksLastCheck;
@@ -41,7 +43,7 @@ public class SneakHandler implements Listener {
 
         PlayerState state = states.computeIfAbsent(player.getName(), e -> new PlayerState());
 
-        int ticksNow = Bukkit.getCurrentTick();
+        int ticksNow = player.getTicksLived();
         int ticksSinceLastCheck = ticksNow - state.ticksLastCheck;
         if (ticksSinceLastCheck >= SneakGrow.cooldown) {
             state.ticksLastCheck = ticksNow;
@@ -118,12 +120,13 @@ public class SneakHandler implements Listener {
             for (int y = -2; y <= 2; y++)
                 for (int z = -5; z <= 5; z++) {
                     Block block = world.getBlockAt(x + centerX, y + centerY, z + centerZ);
-                    BlockData blockData = block.getBlockData();
+                    BlockState blockState = block.getState();
+                    MaterialData blockData = blockState.getData();
                     if (SneakGrow.enableSaplings && blockData instanceof Sapling) {
                         list.add(block);
-                    } else if (SneakGrow.enableCrops && blockData instanceof org.bukkit.block.data.Ageable) {
-                        org.bukkit.block.data.Ageable data = (org.bukkit.block.data.Ageable) blockData;
-                        if (data.getAge() < data.getMaximumAge())
+                    } else if (SneakGrow.enableCrops && blockData instanceof Crops) {
+                        CropState b = ((Crops) blockData).getState();
+                        if (b != CropState.RIPE)
                             list.add(block);
                     }
                 }

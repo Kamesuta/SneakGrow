@@ -11,11 +11,10 @@ import java.util.logging.Level;
 
 public class ReflectionUtil {
 
-    private static Class<?> nmsItemBoneMeal;
+    private static Class<?> nmsItemDye;
     private static Class<?> nmsItemStack;
     private static Class<?> nmsWorld;
     private static Class<?> nmsBlockPosition;
-    private static Class<?> nmsEnumDirection;
 
     private static Class<?> craftItemStack;
     private static Class<?> craftWorld;
@@ -39,19 +38,18 @@ public class ReflectionUtil {
         VERSION = path.substring(path.lastIndexOf('.') + 1);
 
         try {
-            nmsItemBoneMeal = getNmsClass("ItemBoneMeal");
+            nmsItemDye = getNmsClass("ItemDye");
             nmsItemStack = getNmsClass("ItemStack");
             nmsWorld = getNmsClass("World");
             nmsBlockPosition = getNmsClass("BlockPosition");
-            nmsEnumDirection = getNmsClass("EnumDirection");
 
             craftItemStack = getCraftBukkitClass("inventory.CraftItemStack");
             craftWorld = getCraftBukkitClass("CraftWorld");
 
             nmsBlockPositionConstructor = nmsBlockPosition.getConstructor(int.class, int.class, int.class);
 
-            nmsItemBoneMealApply = nmsItemBoneMeal.getMethod("a", nmsItemStack, nmsWorld, nmsBlockPosition);
-            nmsItemBoneMealUnderwaterApply = nmsItemBoneMeal.getMethod("a", nmsItemStack, nmsWorld, nmsBlockPosition, nmsEnumDirection);
+            nmsItemBoneMealApply = nmsItemDye.getMethod("a", nmsItemStack, nmsWorld, nmsBlockPosition);
+            nmsItemBoneMealUnderwaterApply = nmsItemDye.getMethod("a", nmsItemStack, nmsWorld, nmsBlockPosition);
             craftItemStackAsNmsCopy = craftItemStack.getMethod("asNMSCopy", ItemStack.class);
             craftWorldGetHandle = craftWorld.getMethod("getHandle", NO_ARGUMENTS);
         } catch (Exception e) {
@@ -98,10 +96,8 @@ public class ReflectionUtil {
     public static void applyBoneMeal(Object nmsItemStack, Object nmsWorld, Object nmsBlockPosition) {
         try {
             nmsItemBoneMealApply.invoke(null, nmsItemStack, nmsWorld, nmsBlockPosition);
-            for (Object constant : nmsEnumDirection.getEnumConstants()) {
-                nmsItemBoneMealUnderwaterApply.invoke(null, nmsItemStack, nmsWorld, nmsBlockPosition, constant);
-            }
-        } catch (IllegalAccessException | InvocationTargetException e) {
+            nmsItemBoneMealUnderwaterApply.invoke(null, nmsItemStack, nmsWorld, nmsBlockPosition);
+        } catch (IllegalAccessException  | InvocationTargetException e) {
             SneakGrow.log.log(Level.SEVERE, "Error applying bone meal!", e);
         }
     }
