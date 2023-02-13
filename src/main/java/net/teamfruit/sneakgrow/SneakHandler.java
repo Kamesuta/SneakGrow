@@ -105,15 +105,15 @@ public class SneakHandler implements Listener {
             player.spawnParticle(Particle.VILLAGER_HAPPY, location, 5, .2, .2, .2);
     }
 
-    private List<Block> getAgeableBlockInRange(Location location) {
+    private List<Block> getAgeableBlockInRange(Location location, int radius) {
         World world = location.getWorld();
         int centerX = location.getBlockX();
         int centerY = location.getBlockY();
         int centerZ = location.getBlockZ();
         List<Block> list = new ArrayList<>();
-        for (int x = -5; x <= 5; x++)
+        for (int x = -radius; x <= radius; x++)
             for (int y = -2; y <= 2; y++)
-                for (int z = -5; z <= 5; z++) {
+                for (int z = -radius; z <= radius; z++) {
                     Block block = world.getBlockAt(x + centerX, y + centerY, z + centerZ);
                     BlockData blockData = block.getBlockData();
                     if (SneakGrow.enableSaplings && blockData instanceof Sapling) {
@@ -127,8 +127,8 @@ public class SneakHandler implements Listener {
         return list;
     }
 
-    private List<org.bukkit.entity.Ageable> getAgeableEntityInRange(Location location) {
-        return location.getNearbyLivingEntities(5).stream()
+    private List<org.bukkit.entity.Ageable> getAgeableEntityInRange(Location location, int radius) {
+        return location.getNearbyLivingEntities(radius).stream()
                 .filter(e -> e instanceof org.bukkit.entity.Ageable)
                 .map(org.bukkit.entity.Ageable.class::cast)
                 .filter(e -> !e.isAdult() || !e.canBreed())
