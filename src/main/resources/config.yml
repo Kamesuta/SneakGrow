@@ -7,3 +7,11 @@ Tweaks:
   growCrops: 100
   # Show bonemeal particles when appropriate. Not sure why you would turn this off, but eh
   showParticles: true
+  # Radius of blocks to check for saplings and crops
+  blockRadius: 5
+  # Radius of mobs to check for saplings and crops
+  mobRadius: 5
+  # Percentage of blocks to check for saplings and crops
+  blockPercentage: 0.1
+  # Percentage of mobs to check for saplings and crops
+  mobPercentage: 0.05
