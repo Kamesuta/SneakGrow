@@ -1,17 +1,8 @@
 name: SneakGrow
 version: ${project.version}
 main: net.teamfruit.sneakgrow.SneakGrow
-api-version: '1.15'
+api-version: '1.16'
 prefix: EasyStructure
-load: STARTUP
 authors: [Kamesuta]
 description: You can accelerate growing for saplings and crops by sneaking
 website: https://www.teamfruit.net/
-
-permissions:
-  sneakgrow.block:
-    description: You can accelerate growing for saplings and crops by sneaking
-    default: true
-  sneakgrow.entity:
-    description: You can accelerate growing for mobs and reduce breeding cooldown by sneaking
-    default: true

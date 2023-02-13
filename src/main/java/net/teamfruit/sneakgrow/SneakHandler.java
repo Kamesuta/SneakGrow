@@ -15,14 +15,14 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class SneakHandler implements Listener {
-    private Map<String, PlayerState> states = new HashMap<>();
+    private final Map<String, PlayerState> states = new HashMap<>();
 
     private static final ItemStack boneMeal = new ItemStack(Material.BONE_MEAL);
     private static final Object nmsBoneMeal = ReflectionUtil.itemStackAsNmsCopy(boneMeal);
 
     private final Random rnd = new Random();
 
-    public class PlayerState {
+    public static class PlayerState {
         public boolean isSneaking;
         public boolean isSneaked;
         public int ticksLastCheck;
@@ -34,11 +34,6 @@ public class SneakHandler implements Listener {
     }
 
     private void onAction(Player player) {
-        boolean bPermissionBlock = player.hasPermission("sneakgrow.block");
-        boolean bPermissionEntity = player.hasPermission("sneakgrow.entity");
-        if (!bPermissionBlock && !bPermissionEntity)
-            return;
-
         PlayerState state = states.computeIfAbsent(player.getName(), e -> new PlayerState());
 
         int ticksNow = Bukkit.getCurrentTick();
@@ -51,8 +46,9 @@ public class SneakHandler implements Listener {
             Location location = player.getLocation();
 
             if (state.isSneaked) {
-                if (bPermissionBlock) {
-                    Optional<Block> blockOptional = getRandomElement(getAgeableBlockInRange(location));
+                // 作物成長
+                {
+                    Optional<Block> blockOptional = getRandomElement(getAgeableBlockInRange(location, SneakGrow.radius));
 
                     blockOptional.ifPresent(block -> {
                         if (rnd.nextFloat() < .45) {
@@ -65,8 +61,9 @@ public class SneakHandler implements Listener {
                     });
                 }
 
-                if (bPermissionEntity) {
-                    Optional<Ageable> entityOptional = getRandomElement(getAgeableEntityInRange(location));
+                // Mob成長
+                {
+                    Optional<Ageable> entityOptional = getRandomElement(getAgeableEntityInRange(location, SneakGrow.radius));
 
                     entityOptional.ifPresent(entity -> {
                         if (rnd.nextFloat() < .25) {
