@@ -27,7 +27,7 @@ public class ReflectionUtil {
     private static Method craftItemStackAsNmsCopy;
     private static Method craftWorldGetHandle;
 
-    private static final String NMS_NAMESPACE = "net.minecraft.server";
+    private static final String NMS_NAMESPACE = "net.minecraft";
     private static final String CRAFTBUKKIT_NAMESPACE = "org.bukkit.craftbukkit";
 
     private static final String VERSION;
@@ -36,17 +36,23 @@ public class ReflectionUtil {
 
     static {
         String path = Bukkit.getServer().getClass().getPackage().getName();
+        System.out.println(path);
+        System.out.println(path);
+        System.out.println(path);
         VERSION = path.substring(path.lastIndexOf('.') + 1);
 
         try {
-            nmsItemBoneMeal = getNmsClass("ItemBoneMeal");
-            nmsItemStack = getNmsClass("ItemStack");
-            nmsWorld = getNmsClass("World");
-            nmsBlockPosition = getNmsClass("BlockPosition");
-            nmsEnumDirection = getNmsClass("EnumDirection");
+            nmsItemBoneMeal = getNmsClass("world.item.ItemBoneMeal");
+            nmsItemStack = getNmsClass("world.item.ItemStack");
 
+            nmsBlockPosition = getNmsClass("core.BlockPosition");
+            nmsEnumDirection = getNmsClass("core.EnumDirection");
+            nmsWorld = getNmsClass("world.level.World");
+            
             craftItemStack = getCraftBukkitClass("inventory.CraftItemStack");
             craftWorld = getCraftBukkitClass("CraftWorld");
+
+
 
             nmsBlockPositionConstructor = nmsBlockPosition.getConstructor(int.class, int.class, int.class);
 
@@ -54,6 +60,8 @@ public class ReflectionUtil {
             nmsItemBoneMealUnderwaterApply = nmsItemBoneMeal.getMethod("a", nmsItemStack, nmsWorld, nmsBlockPosition, nmsEnumDirection);
             craftItemStackAsNmsCopy = craftItemStack.getMethod("asNMSCopy", ItemStack.class);
             craftWorldGetHandle = craftWorld.getMethod("getHandle", NO_ARGUMENTS);
+
+
         } catch (Exception e) {
             SneakGrow.log.log(Level.SEVERE,
                     "Error loading NMS Classes, are you using the right version?", e);
@@ -61,7 +69,9 @@ public class ReflectionUtil {
     }
 
     public static Class<?> getNmsClass(String name) throws ClassNotFoundException {
-        return Class.forName(NMS_NAMESPACE + "." + VERSION + "." + name);
+        System.out.println(NMS_NAMESPACE);
+        System.out.println(VERSION);
+        return Class.forName(NMS_NAMESPACE + "." + name);
     }
 
     public static Class<?> getCraftBukkitClass(String name) throws ClassNotFoundException {
