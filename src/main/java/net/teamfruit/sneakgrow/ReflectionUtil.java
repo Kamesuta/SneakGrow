@@ -39,11 +39,11 @@ public class ReflectionUtil {
         VERSION = path.substring(path.lastIndexOf('.') + 1);
 
         try {
-            nmsItemBoneMeal = getNmsClass("ItemBoneMeal");
-            nmsItemStack = getNmsClass("ItemStack");
-            nmsWorld = getNmsClass("World");
-            nmsBlockPosition = getNmsClass("BlockPosition");
-            nmsEnumDirection = getNmsClass("EnumDirection");
+            nmsItemBoneMeal = getNmsClass("net.minecraft.world.item", "ItemBoneMeal");
+            nmsItemStack = getNmsClass("net.minecraft.world.item", "ItemStack");
+            nmsWorld = getNmsClass("net.minecraft.world.level", "World");
+            nmsBlockPosition = getNmsClass("net.minecraft.core", "BlockPosition");
+            nmsEnumDirection = getNmsClass("net.minecraft.core", "EnumDirection");
 
             craftItemStack = getCraftBukkitClass("inventory.CraftItemStack");
             craftWorld = getCraftBukkitClass("CraftWorld");
@@ -60,8 +60,12 @@ public class ReflectionUtil {
         }
     }
 
-    public static Class<?> getNmsClass(String name) throws ClassNotFoundException {
-        return Class.forName(NMS_NAMESPACE + "." + VERSION + "." + name);
+    public static Class<?> getNmsClass(String packagePath, String name) throws ClassNotFoundException {
+        try {
+            return Class.forName(packagePath + "." + name);
+        } catch (ClassNotFoundException e) {
+            return Class.forName(NMS_NAMESPACE + "." + VERSION + "." + name);
+        }
     }
 
     public static Class<?> getCraftBukkitClass(String name) throws ClassNotFoundException {
