@@ -129,3 +129,8 @@ buildNumber.properties
 .flattened-pom.xml
 
 # End of https://www.gitignore.io/api/java,maven,intellij+all
+
+# E2Eテスト用
+test/node_modules/
+test/.cache/
+test/runs/

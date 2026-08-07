@@ -1,0 +1,12 @@
+{
+  "name": "sneakgrow-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node e2e.mjs"
+  },
+  "dependencies": {
+    "mineflayer": "4.37.1",
+    "vec3": "0.1.10"
+  }
+}
