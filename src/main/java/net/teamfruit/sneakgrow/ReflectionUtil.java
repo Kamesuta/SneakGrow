@@ -39,19 +39,21 @@ public class ReflectionUtil {
         VERSION = path.substring(path.lastIndexOf('.') + 1);
 
         try {
-            nmsItemBoneMeal = getNmsClass("net.minecraft.world.item", "ItemBoneMeal");
+            nmsItemBoneMeal = getFirstNmsClass("net.minecraft.world.item", "ItemBoneMeal", "BoneMealItem", "ItemDye");
             nmsItemStack = getNmsClass("net.minecraft.world.item", "ItemStack");
-            nmsWorld = getNmsClass("net.minecraft.world.level", "World");
-            nmsBlockPosition = getNmsClass("net.minecraft.core", "BlockPosition");
-            nmsEnumDirection = getNmsClass("net.minecraft.core", "EnumDirection");
+            nmsWorld = getFirstNmsClass("net.minecraft.world.level", "World", "Level");
+            nmsBlockPosition = getFirstNmsClass("net.minecraft.core", "BlockPosition", "BlockPos");
+            nmsEnumDirection = getFirstNmsClass("net.minecraft.core", "EnumDirection", "Direction");
 
             craftItemStack = getCraftBukkitClass("inventory.CraftItemStack");
             craftWorld = getCraftBukkitClass("CraftWorld");
 
             nmsBlockPositionConstructor = nmsBlockPosition.getConstructor(int.class, int.class, int.class);
 
-            nmsItemBoneMealApply = nmsItemBoneMeal.getMethod("a", nmsItemStack, nmsWorld, nmsBlockPosition);
-            nmsItemBoneMealUnderwaterApply = nmsItemBoneMeal.getMethod("a", nmsItemStack, nmsWorld, nmsBlockPosition, nmsEnumDirection);
+            nmsItemBoneMealApply = getFirstMethod(nmsItemBoneMeal,
+                    new String[]{"a", "growCrop"}, nmsItemStack, nmsWorld, nmsBlockPosition);
+            nmsItemBoneMealUnderwaterApply = getOptionalFirstMethod(nmsItemBoneMeal,
+                    new String[]{"a", "growWaterPlant"}, nmsItemStack, nmsWorld, nmsBlockPosition, nmsEnumDirection);
             craftItemStackAsNmsCopy = craftItemStack.getMethod("asNMSCopy", ItemStack.class);
             craftWorldGetHandle = craftWorld.getMethod("getHandle", NO_ARGUMENTS);
         } catch (Exception e) {
@@ -66,6 +68,58 @@ public class ReflectionUtil {
         } catch (ClassNotFoundException e) {
             return Class.forName(NMS_NAMESPACE + "." + VERSION + "." + name);
         }
+    }
+
+    private static Class<?> getFirstNmsClass(String packagePath, String... names) throws ClassNotFoundException {
+        ClassNotFoundException last = null;
+        for (String name : names) {
+            try {
+                return getNmsClass(packagePath, name);
+            } catch (ClassNotFoundException e) {
+                last = e;
+            }
+        }
+        throw last;
+    }
+
+    private static Method getFirstMethod(Class<?> owner, String[] names, Class<?>... parameterTypes)
+            throws NoSuchMethodException {
+        NoSuchMethodException last = null;
+        for (String name : names) {
+            try {
+                return owner.getMethod(name, parameterTypes);
+            } catch (NoSuchMethodException e) {
+                last = e;
+            }
+        }
+        throw last;
+    }
+
+    private static Method getOptionalFirstMethod(Class<?> owner, String[] names, Class<?>... parameterTypes) {
+        try {
+            return getFirstMethod(owner, names, parameterTypes);
+        } catch (NoSuchMethodException e) {
+            return null;
+        }
+    }
+
+    public static boolean hasMethod(Class<?> owner, String name, Class<?>... parameterTypes) {
+        try {
+            owner.getMethod(name, parameterTypes);
+            return true;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
+    }
+
+    public static <T extends Enum<T>> T getFirstEnumValue(Class<T> enumClass, String... names) {
+        for (String name : names) {
+            try {
+                return Enum.valueOf(enumClass, name);
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+        throw new IllegalArgumentException("No matching enum value found in " + enumClass.getName());
     }
 
     public static Class<?> getCraftBukkitClass(String name) throws ClassNotFoundException {
@@ -106,8 +160,11 @@ public class ReflectionUtil {
     public static void applyBoneMeal(Object nmsItemStack, Object nmsWorld, Object nmsBlockPosition) {
         try {
             nmsItemBoneMealApply.invoke(null, nmsItemStack, nmsWorld, nmsBlockPosition);
-            for (Object constant : nmsEnumDirection.getEnumConstants()) {
-                nmsItemBoneMealUnderwaterApply.invoke(null, nmsItemStack, nmsWorld, nmsBlockPosition, constant);
+            if (nmsItemBoneMealUnderwaterApply != null) {
+                // 上面から水中の植物に骨粉を適用する
+                Object direction = getFirstEnumValue(nmsEnumDirection.asSubclass(Enum.class), "UP");
+                nmsItemBoneMealUnderwaterApply.invoke(
+                        null, nmsItemStack, nmsWorld, nmsBlockPosition, direction);
             }
         } catch (IllegalAccessException | InvocationTargetException e) {
             SneakGrow.log.log(Level.SEVERE, "Error applying bone meal!", e);
