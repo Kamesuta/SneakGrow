@@ -111,7 +111,14 @@ function buildPlugin() {
     shell: process.platform === 'win32'
   })
   if (result.error || result.status !== 0) throw new Error(`Maven build failed${result.error ? `: ${result.error.message}` : ''}`)
-  return path.join(ROOT_DIR, 'target', 'sneakgrow-1.5-SNAPSHOT.jar')
+  const finalName = spawnSync(mvn, ['help:evaluate', '-Dexpression=project.build.finalName', '-q', '-DforceStdout'], {
+    cwd: ROOT_DIR,
+    encoding: 'utf8',
+    shell: process.platform === 'win32'
+  })
+  if (finalName.error || finalName.status !== 0)
+    throw new Error(`Could not resolve Maven artifact name${finalName.error ? `: ${finalName.error.message}` : ''}`)
+  return path.join(ROOT_DIR, 'target', `${finalName.stdout.trim()}.jar`)
 }
 
 async function freePort() {
