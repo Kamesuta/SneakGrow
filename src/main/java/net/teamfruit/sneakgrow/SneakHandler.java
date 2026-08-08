@@ -155,7 +155,7 @@ public class SneakHandler implements Listener {
     }
 
     private static List<org.bukkit.entity.Ageable> getAgeableEntityInRange(Location location, int radius) {
-        return location.getNearbyLivingEntities(radius).stream()
+        return location.getWorld().getNearbyEntities(location, radius, radius, radius).stream()
                 .filter(e -> e instanceof org.bukkit.entity.Ageable)
                 .map(org.bukkit.entity.Ageable.class::cast)
                 .filter(e -> !e.isAdult() || !e.canBreed())

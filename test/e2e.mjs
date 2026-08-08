@@ -149,9 +149,9 @@ function prepareServer(runDir, pluginJar, compatibilityPlugins, port) {
   growCrops: true
   showParticles: false
   blockRadius: 5
-  mobRadius: 0
+  mobRadius: 5
   blockPercentage: 0.25
-  mobPercentage: 0.0
+  mobPercentage: 1.0
 `)
 }
 
@@ -213,6 +213,24 @@ function cropAges(bot) {
   return ages
 }
 
+async function assertMobGrowth(child, runDir, paperVersion) {
+  if (paperVersion === '1.12.2') {
+    command(child, 'scoreboard players tag @e[type=Cow,tag=e2e_child] add e2e_child_pass {Age:0}')
+    command(child, 'execute @e[tag=e2e_child_pass] ~ ~ ~ say E2E_CHILD_GROWTH_PASS')
+    command(child, 'scoreboard players tag @e[type=Cow,tag=e2e_cooldown] add e2e_cooldown_pass {Age:0}')
+    command(child, 'execute @e[tag=e2e_cooldown_pass] ~ ~ ~ say E2E_BREED_COOLDOWN_PASS')
+  } else {
+    command(child, 'tag @e[type=minecraft:cow,tag=e2e_child,nbt={Age:0},limit=1] add e2e_child_pass')
+    command(child, 'execute as @e[tag=e2e_child_pass,limit=1] run say E2E_CHILD_GROWTH_PASS')
+    command(child, 'tag @e[type=minecraft:cow,tag=e2e_cooldown,nbt={Age:0},limit=1] add e2e_cooldown_pass')
+    command(child, 'execute as @e[tag=e2e_cooldown_pass,limit=1] run say E2E_BREED_COOLDOWN_PASS')
+  }
+  await sleep(750)
+  const serverLog = fs.readFileSync(path.join(runDir, 'logs', 'latest.log'), 'utf8')
+  assert.match(serverLog, /E2E_CHILD_GROWTH_PASS/, 'child animal did not become an adult (age 0)')
+  assert.match(serverLog, /E2E_BREED_COOLDOWN_PASS/, 'breeding cooldown was not cleared (age 0)')
+}
+
 async function runVersion(requestedVersion, pluginJar) {
   const { paperVersion, jar } = await downloadPaper(requestedVersion)
   const compatibilityPlugins = paperVersion.startsWith('26.') ? await downloadViaPlugins() : []
@@ -248,12 +266,29 @@ async function runVersion(requestedVersion, pluginJar) {
     await sleep(1_000)
     command(child, 'tp SneakGrowTest 0.5 65 3.5')
     command(child, 'gamemode survival SneakGrowTest')
+    if (legacy) {
+      command(child, 'summon Cow 3 64 3 {Tags:["e2e_child"],Age:-100,AgeLocked:1b,NoAI:1b,Silent:1b}')
+      command(child, 'summon Cow -3 64 3 {Tags:["e2e_cooldown"],Age:100,AgeLocked:1b,NoAI:1b,Silent:1b}')
+    } else {
+      command(child, 'summon minecraft:cow 3 64 3 {Tags:["e2e_child"],Age:-100,AgeLocked:1b,NoAI:1b,Silent:1b}')
+      command(child, 'summon minecraft:cow -3 64 3 {Tags:["e2e_cooldown"],Age:100,AgeLocked:1b,NoAI:1b,Silent:1b}')
+    }
     await sleep(1_500)
     const before = cropAges(bot)
     assert.equal(before.length, 24, `expected 24 wheat crops, found ${before.length}`)
     assert.ok(before.every(age => age === 0), `crops were not age 0: ${before}`)
 
-    for (let i = 0; i < 12; i++) {
+    bot.setControlState('sneak', true)
+    await sleep(150)
+    bot.setControlState('sneak', false)
+    await sleep(150)
+    bot.setControlState('sneak', true)
+    await sleep(150)
+    bot.setControlState('sneak', false)
+    await sleep(500)
+    await assertMobGrowth(child, runDir, paperVersion)
+
+    for (let i = 2; i < 12; i++) {
       bot.setControlState('sneak', true)
       await sleep(150)
       bot.setControlState('sneak', false)
